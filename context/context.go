@@ -2,6 +2,7 @@ package context
 
 import (
 	"github.com/stefanopulze/daitem/storage"
+	"log"
 	"time"
 )
 
@@ -43,7 +44,7 @@ func (ctx *Context) IsExpired() bool {
 		contextExpirationOffset = &d
 	}
 
-	return ctx.SessionTime.Add(*contextExpirationOffset).After(time.Now())
+	return ctx.SessionTime.Add(*contextExpirationOffset).Before(time.Now())
 }
 
 func (ctx *Context) Merge(source *Context) {
@@ -88,6 +89,7 @@ func Load(storage storage.Storage) (*Context, error) {
 	if bytes, e := storage.Read(SessionTime); e == nil {
 		if date, err := time.Parse(time.RFC3339, string(bytes)); err == nil {
 			ctx.SessionTime = date
+			log.Printf("Restore session from: %v", date.Format(time.RFC3339))
 		}
 	}
 

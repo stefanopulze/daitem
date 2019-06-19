@@ -41,11 +41,21 @@ func (client *Client) Status() (bool, error) {
 		return false, err
 	}
 
-	return true, nil
+	status, err := client.api.CurrentState()
+	if err != nil {
+		return false, err
+	}
+
+	println(status)
+	return status.SystemState == "on", nil
 }
 
 func (client *Client) TurnAlarm(on bool) error {
 	if err := client.ensureSession(); err != nil {
+		return err
+	}
+
+	if _, err := client.api.TurnAlarm(on); err != nil {
 		return err
 	}
 
