@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"github.com/stefanopulze/daitem/data"
 	"github.com/stefanopulze/daitem/errors"
+	"time"
 )
 
 type loginRequest struct {
@@ -21,7 +22,9 @@ type loginResponse struct {
 func (api *Api) Login() (*data.DeviceSession, error) {
 	if api.context.IsValid() {
 		return &data.DeviceSession{
-			SessionId: api.context.SessionId,
+			SessionId:   api.context.SessionId,
+			SessionTime: api.context.SessionTime,
+			UseCache:    true,
 		}, nil
 	}
 
@@ -46,7 +49,12 @@ func (api *Api) Login() (*data.DeviceSession, error) {
 		return nil, err
 	}
 
+	api.context.SessionId = respData.SessionId
+	api.context.SessionTime = time.Now()
+
 	return &data.DeviceSession{
-		SessionId: api.context.SessionId,
+		SessionId:   api.context.SessionId,
+		SessionTime: api.context.SessionTime,
+		UseCache:    false,
 	}, nil
 }

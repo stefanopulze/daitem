@@ -1,7 +1,11 @@
 package data
 
+import "time"
+
 type DeviceSession struct {
-	SessionId string
+	SessionId   string
+	SessionTime time.Time
+	UseCache    bool
 }
 
 type DeviceInfo struct {
@@ -18,9 +22,11 @@ type DeviceConfiguration struct {
 	TransmitterId  string
 	CentralId      string
 	ConnectionType string
+	UseCache       bool
 }
 
 type DeviceStatus struct {
 	CommandStatus string
 	SystemState   string
+	UseCache      bool
 }

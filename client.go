@@ -6,11 +6,12 @@ import (
 	"github.com/stefanopulze/daitem/data"
 	"github.com/stefanopulze/daitem/storage"
 	"log"
+	"time"
 )
 
 type Client struct {
 	api        *api.Api
-	storage    *storage.Storage
+	storage    storage.Storage
 	context    *context.Context
 	deviceInfo *data.DeviceInfo
 }
@@ -24,9 +25,14 @@ func NewClient(options *ClientOptions) *Client {
 		TransmitterId: options.TransmitterId,
 	}
 
+	if savedContext, err := context.Load(*options.Storage); err == nil {
+		ctx.Merge(savedContext)
+	}
+
 	return &Client{
 		api:     api.NewApi(&ctx),
-		storage: options.Storage,
+		storage: *options.Storage,
+		context: &ctx,
 	}
 }
 
@@ -60,6 +66,10 @@ func (client *Client) ensureSession() error {
 	session, err := client.api.Login()
 	if err != nil {
 		return err
+	} else if !session.UseCache {
+		client.storage.Write(context.SessionId, []byte(session.SessionId))
+		client.storage.Write(context.SessionTime, []byte(session.SessionTime.Format(time.RFC3339)))
+
 	}
 
 	log.Printf("Session id: %s", session.SessionId)
@@ -68,6 +78,10 @@ func (client *Client) ensureSession() error {
 	configuration, err := client.api.Configuration()
 	if err != nil {
 		return err
+	} else if !configuration.UseCache {
+		client.storage.Write(context.CentralId, []byte(configuration.CentralId))
+		client.storage.Write(context.TransmitterId, []byte(configuration.TransmitterId))
+		client.storage.Write(context.ConnectionType, []byte(configuration.ConnectionType))
 	}
 
 	log.Printf("Device central id: %s", configuration.CentralId)
@@ -79,6 +93,8 @@ func (client *Client) ensureSession() error {
 		if err != nil {
 			return err
 		}
+
+		client.storage.Write(context.TTMSessionId, []byte(info.TTMSessionId))
 
 		client.deviceInfo = info
 		log.Printf("Device info: %s", info.FirmwareVersion)

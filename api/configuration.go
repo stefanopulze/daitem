@@ -27,6 +27,7 @@ func (api *Api) Configuration() (*data.DeviceConfiguration, error) {
 			TransmitterId:  api.context.TransmitterId,
 			CentralId:      api.context.CentralId,
 			ConnectionType: api.context.ConnectionType,
+			UseCache:       true,
 		}, nil
 	}
 
@@ -60,5 +61,6 @@ func (api *Api) Configuration() (*data.DeviceConfiguration, error) {
 		TransmitterId:  api.context.TransmitterId,
 		CentralId:      api.context.CentralId,
 		ConnectionType: api.context.ConnectionType,
+		UseCache:       false,
 	}, nil
 }

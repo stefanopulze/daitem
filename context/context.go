@@ -7,6 +7,15 @@ import (
 
 var contextExpirationOffset *time.Duration
 
+const (
+	SessionId      = "SessionId"
+	SessionTime    = "SessionTime"
+	CentralId      = "CentralId"
+	TransmitterId  = "TransmitterId"
+	ConnectionType = "ConnectionType"
+	TTMSessionId   = "TTMSessionId"
+)
+
 // Context contains all sensitive data of the user and the current http session used by
 // api to make http call
 type Context struct {
@@ -18,7 +27,7 @@ type Context struct {
 	SessionId      string
 	TTMSessionId   string
 	ConnectionType string
-	creationTime   time.Time
+	SessionTime    time.Time
 }
 
 // Check if context is expired
@@ -34,7 +43,22 @@ func (ctx *Context) IsExpired() bool {
 		contextExpirationOffset = &d
 	}
 
-	return ctx.creationTime.Add(*contextExpirationOffset).After(time.Now())
+	return ctx.SessionTime.Add(*contextExpirationOffset).After(time.Now())
+}
+
+func (ctx *Context) Merge(source *Context) {
+	if len(ctx.CentralId) == 0 {
+		ctx.CentralId = source.CentralId
+	}
+
+	if len(ctx.TransmitterId) == 0 {
+		ctx.TransmitterId = source.TransmitterId
+	}
+
+	ctx.SessionId = source.SessionId
+	ctx.TTMSessionId = source.TTMSessionId
+	ctx.ConnectionType = source.ConnectionType
+	ctx.SessionTime = source.SessionTime
 }
 
 // Check if context is NOT expired
@@ -42,12 +66,30 @@ func (ctx *Context) IsValid() bool {
 	return !ctx.IsExpired()
 }
 
-// Persist context on storage
-func (ctx *Context) Save(storage storage.Storage) {
-
-}
-
 // Load context from storage
 func Load(storage storage.Storage) (*Context, error) {
-	return nil, nil
+	ctx := Context{}
+
+	if bytes, e := storage.Read(CentralId); e == nil {
+		ctx.CentralId = string(bytes)
+	}
+	if bytes, e := storage.Read(TransmitterId); e == nil {
+		ctx.TransmitterId = string(bytes)
+	}
+	if bytes, e := storage.Read(SessionId); e == nil {
+		ctx.SessionId = string(bytes)
+	}
+	if bytes, e := storage.Read(TTMSessionId); e == nil {
+		ctx.TTMSessionId = string(bytes)
+	}
+	if bytes, e := storage.Read(ConnectionType); e == nil {
+		ctx.ConnectionType = string(bytes)
+	}
+	if bytes, e := storage.Read(SessionTime); e == nil {
+		if date, err := time.Parse(time.RFC3339, string(bytes)); err == nil {
+			ctx.SessionTime = date
+		}
+	}
+
+	return &ctx, nil
 }
