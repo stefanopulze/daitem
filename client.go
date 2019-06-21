@@ -10,7 +10,7 @@ import (
 )
 
 type Client struct {
-	api        *api.Api
+	Api        *api.Api
 	storage    storage.Storage
 	context    *context.Context
 	deviceInfo *data.DeviceInfo
@@ -30,7 +30,7 @@ func NewClient(options *ClientOptions) *Client {
 	}
 
 	return &Client{
-		api:     api.NewApi(&ctx),
+		Api:     api.NewApi(&ctx),
 		storage: *options.Storage,
 		context: &ctx,
 	}
@@ -41,7 +41,7 @@ func (client *Client) Status() (bool, error) {
 		return false, err
 	}
 
-	status, err := client.api.CurrentState()
+	status, err := client.Api.CurrentState()
 	if err != nil {
 		return false, err
 	}
@@ -55,7 +55,7 @@ func (client *Client) TurnAlarm(on bool) error {
 		return err
 	}
 
-	if _, err := client.api.TurnAlarm(on); err != nil {
+	if _, err := client.Api.TurnAlarm(on); err != nil {
 		return err
 	}
 
@@ -73,7 +73,7 @@ func (client *Client) Info() (*data.DeviceInfo, error) {
 
 func (client *Client) ensureSession() error {
 	// Get new sessionId
-	session, err := client.api.Login()
+	session, err := client.Api.Login()
 	if err != nil {
 		return err
 	} else if !session.UseCache {
@@ -85,7 +85,7 @@ func (client *Client) ensureSession() error {
 	log.Printf("Session id: %s", session.SessionId)
 
 	// Get CentralId, TrasmitterId and ConnectionType if needed
-	configuration, err := client.api.Configuration()
+	configuration, err := client.Api.Configuration()
 	if err != nil {
 		return err
 	} else if !configuration.UseCache {
@@ -97,8 +97,8 @@ func (client *Client) ensureSession() error {
 	log.Printf("Device central id: %s", configuration.CentralId)
 
 	// Ger new ttmSessionId
-	if e := client.api.KeepAlive(); e != nil {
-		info, err := client.api.Connect()
+	if e := client.Api.KeepAlive(); e != nil {
+		info, err := client.Api.Connect()
 
 		if err != nil {
 			return err
