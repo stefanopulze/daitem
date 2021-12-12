@@ -72,29 +72,30 @@ func (client *Client) Info() (*data.DeviceInfo, error) {
 }
 
 func (client *Client) ensureSession() error {
-	// Get new sessionId
-	session, err := client.Api.Login()
-	if err != nil {
-		return err
-	} else if !session.UseCache {
-		client.storage.Write(context.SessionId, []byte(session.SessionId))
-		client.storage.Write(context.SessionTime, []byte(session.SessionTime.Format(time.RFC3339)))
+	if client.context.IsExpired() {
+		// Get new sessionId
+		session, err := client.Api.Login()
+		if err != nil {
+			return err
+		} else if !session.UseCache {
+			client.storage.Write(context.SessionId, []byte(session.SessionId))
+			client.storage.Write(context.SessionTime, []byte(session.SessionTime.Format(time.RFC3339)))
+		}
 
+		log.Printf("Session id: %s", session.SessionId)
+
+		// Get CentralId, TrasmitterId and ConnectionType if needed
+		configuration, err := client.Api.Configuration()
+		if err != nil {
+			return err
+		} else if !configuration.UseCache {
+			client.storage.Write(context.CentralId, []byte(configuration.CentralId))
+			client.storage.Write(context.TransmitterId, []byte(configuration.TransmitterId))
+			client.storage.Write(context.ConnectionType, []byte(configuration.ConnectionType))
+		}
+
+		log.Printf("Device central id: %s", configuration.CentralId)
 	}
-
-	log.Printf("Session id: %s", session.SessionId)
-
-	// Get CentralId, TrasmitterId and ConnectionType if needed
-	configuration, err := client.Api.Configuration()
-	if err != nil {
-		return err
-	} else if !configuration.UseCache {
-		client.storage.Write(context.CentralId, []byte(configuration.CentralId))
-		client.storage.Write(context.TransmitterId, []byte(configuration.TransmitterId))
-		client.storage.Write(context.ConnectionType, []byte(configuration.ConnectionType))
-	}
-
-	log.Printf("Device central id: %s", configuration.CentralId)
 
 	// Ger new ttmSessionId
 	if e := client.Api.KeepAlive(); e != nil {

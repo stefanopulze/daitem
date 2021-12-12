@@ -62,7 +62,7 @@ func (ctx *Context) Merge(source *Context) {
 	ctx.SessionTime = source.SessionTime
 }
 
-// Check if context is NOT expired
+// IsValid Check if context is NOT expired
 func (ctx *Context) IsValid() bool {
 	return !ctx.IsExpired()
 }

@@ -20,7 +20,6 @@ func (api *Api) sendPost(url string, data interface{}) (*http.Response, error) {
 	if jsonString, err := json.Marshal(data); err != nil {
 		return nil, err
 	} else {
-		log.Printf("Sending json to %s: %s\n", url, jsonString)
 		return api.http.Post(fullUrl, contentType, bytes.NewBuffer(jsonString))
 	}
 }
