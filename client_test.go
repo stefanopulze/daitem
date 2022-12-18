@@ -6,7 +6,10 @@ import (
 )
 
 func TestNewClient(t *testing.T) {
-	options, _ := DefaultOptions("EMAIL", "PWD", "1234")
+	options, _ := DefaultOptions(
+		"stefano.pulze87@gmail.com",
+		"SP+daitem5715!*",
+		"0715")
 
 	client := NewClient(options)
 
@@ -15,4 +18,6 @@ func TestNewClient(t *testing.T) {
 	} else {
 		log.Printf("Current status: %v", status)
 	}
+
+	client.TurnAlarm(false)
 }

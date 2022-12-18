@@ -56,7 +56,7 @@ func (api *Api) SystemState() (*data.DeviceStatus, error) {
 
 func (api *Api) CurrentState() (*data.DeviceStatus, error) {
 	if api.context.TTMSessionId == "" {
-		errors.New("invalid ttmSessionId. Please connect first")
+		return nil, errors.New("invalid ttmSessionId. Please connect first")
 	}
 
 	request := statusRequest{
@@ -80,8 +80,6 @@ func (api *Api) CurrentState() (*data.DeviceStatus, error) {
 	if err := checkValidStatus(status.Status); err != nil {
 		return nil, err
 	}
-
-	println(status.CommandStatus)
 
 	return &data.DeviceStatus{
 		SystemState:   status.SystemState,

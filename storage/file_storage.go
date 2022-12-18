@@ -1,7 +1,7 @@
 package storage
 
 import (
-	"io/ioutil"
+	"io"
 	"os"
 	"path/filepath"
 	"strings"
@@ -33,7 +33,7 @@ func (f *FileStorage) Read(key string) ([]byte, error) {
 
 	defer file.Close()
 
-	bytes, err := ioutil.ReadAll(file)
+	bytes, err := io.ReadAll(file)
 	return bytes, nil
 }
 

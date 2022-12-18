@@ -3,7 +3,7 @@ package api
 import (
 	"encoding/json"
 	"errors"
-	"io/ioutil"
+	"io"
 )
 
 type commandRequest struct {
@@ -45,7 +45,7 @@ func (api *Api) TurnAlarm(status bool) (bool, error) {
 	defer response.Body.Close()
 
 	if response.StatusCode != 200 {
-		bodyBytes, _ := ioutil.ReadAll(response.Body)
+		bodyBytes, _ := io.ReadAll(response.Body)
 		println(string(bodyBytes))
 		return false, errors.New("daitem server error")
 	}

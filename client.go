@@ -46,7 +46,6 @@ func (client *Client) Status() (bool, error) {
 		return false, err
 	}
 
-	println(status)
 	return status.SystemState == "on", nil
 }
 
@@ -59,7 +58,7 @@ func (client *Client) TurnAlarm(on bool) error {
 		return err
 	}
 
-	log.Print("Turning alarm on")
+	log.Printf("Turning alarm: %t", on)
 	return nil
 }
 
