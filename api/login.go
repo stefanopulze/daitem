@@ -2,9 +2,12 @@ package api
 
 import (
 	"encoding/json"
-	"github.com/stefanopulze/daitem/data"
-	"github.com/stefanopulze/daitem/errors"
-	"time"
+	"errors"
+)
+
+var (
+	ErrInvalidCredentials  = errors.New("invalid credentials")
+	ErrInvalidRefreshToken = errors.New("invalid refresh token")
 )
 
 type loginRequest struct {
@@ -12,49 +15,70 @@ type loginRequest struct {
 	Password string `json:"password"`
 }
 
-type loginResponse struct {
-	Status
-
-	SessionId string `json:"sessionId"`
-	Country   string `json:"country"`
+type refreshTokenRequest struct {
+	RefreshToken string `json:"refresh_token"`
 }
 
-func (api *Api) Login() (*data.DeviceSession, error) {
-	if api.context.IsValid() {
-		return &data.DeviceSession{
-			SessionId:   api.context.SessionId,
-			SessionTime: api.context.SessionTime,
-			UseCache:    true,
-		}, nil
+type LoginResponse struct {
+	DiagralId    string `json:"diagralId"`
+	UserId       int    `json:"userId"`
+	AccessToken  string `json:"access_token"`
+	ExpiresIn    int    `json:"expires_in"`
+	IdToken      string `json:"id_token"`
+	RefreshToken string `json:"refresh_token"`
+	TokenType    string `json:"token_type"`
+}
+
+func (c *Client) AuthWithCredentials(username string, password string) (*LoginResponse, error) {
+	payload := loginRequest{
+		Username: username,
+		Password: password,
 	}
 
-	request := loginRequest{
-		Username: api.context.Username,
-		Password: api.context.Password,
-	}
-	response, err := api.sendPost("/authenticate/login", request)
+	response, err := c.http.Post("/topaze/v2/authenticate/login", payload)
 
 	if err != nil {
-		return nil, errors.HttpError(err)
-	}
-
-	defer response.Body.Close()
-
-	var respData loginResponse
-	if err := json.NewDecoder(response.Body).Decode(&respData); err != nil {
-		return nil, errors.JsonError(err)
-	}
-
-	if err := checkValidStatus(respData.Status); err != nil {
 		return nil, err
 	}
 
-	api.context.SessionId = respData.SessionId
-	api.context.SessionTime = time.Now()
+	if response.StatusCode != 200 {
+		return nil, ErrInvalidCredentials
+	}
 
-	return &data.DeviceSession{
-		SessionId:   api.context.SessionId,
-		SessionTime: api.context.SessionTime,
-		UseCache:    false,
-	}, nil
+	defer func() {
+		_ = response.Body.Close()
+	}()
+
+	data := new(LoginResponse)
+	if err := json.NewDecoder(response.Body).Decode(&data); err != nil {
+		return nil, err
+	}
+
+	return data, nil
+}
+
+func (c *Client) AuthWithRefreshToken(refreshToken string) (*LoginResponse, error) {
+	payload := refreshTokenRequest{
+		RefreshToken: refreshToken,
+	}
+	response, err := c.http.Post("topaze/v1/authenticate/refresh", payload)
+
+	if err != nil {
+		return nil, err
+	}
+
+	if response.StatusCode != 200 {
+		return nil, ErrInvalidRefreshToken
+	}
+
+	defer func() {
+		_ = response.Body.Close()
+	}()
+
+	data := new(LoginResponse)
+	if err = json.NewDecoder(response.Body).Decode(&data); err != nil {
+		return nil, err
+	}
+
+	return data, nil
 }
